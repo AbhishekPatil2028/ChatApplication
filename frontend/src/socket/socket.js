@@ -1,8 +1,7 @@
 import { io } from "socket.io-client";
 
-const chatSocket = io("http://localhost:5000", {
+const chatSocket = io(import.meta.env.VITE_SOCKET_URL, {
   autoConnect: false,
-  transports: ["websocket"], // 🔥 IMPORTANT
 });
 
 export default chatSocket;
