@@ -126,11 +126,23 @@ useEffect(() => {
 
 
   /* ================= SOCKET ================= */
+
+
+
   useEffect(() => {
-       if (!chatSocket.connected) {
-    chatSocket.connect();
+       // ✅ CONNECT SOCKET
+  chatSocket.connect();
+
+  // ✅ AFTER CONNECT JOIN USER
+  chatSocket.on("connect", () => {
+    console.log("✅ Connected:", chatSocket.id);
+
     chatSocket.emit("join", { userId: user._id });
-  }
+  });
+
+  chatSocket.on("connect_error", (err) => {
+    console.log("❌ Socket Error:", err.message);
+  });
     chatSocket.on("onlineUsers", (list) => {
        console.log("ONLINE USERS FROM SERVER:", list);
       const newOnline = new Set(list.map((u) => u._id));
@@ -283,13 +295,14 @@ chatSocket.on("stopTyping", ({ senderId }) => {
   let lastDateLabel = "";
 
   return (
-    <div className="wa-container">
-      {/* SIDEBAR */}
+<div className={`wa-container ${selectedUser ? "chat-open" : ""}`}>      {/* SIDEBAR */}
       <div className="wa-sidebar">
         <div className="wa-profile">
           <span>{user.name}</span>
           <button onClick={() => setShowLogoutModal(true)}>Logout</button>
         </div>
+          
+          <div className="wa-user-list">
 
         {users.map((u) => (
   <div
@@ -332,18 +345,30 @@ chatSocket.on("stopTyping", ({ senderId }) => {
     )}
   </div>
 ))}
+          </div>
+
 
       </div>
 
       {/* CHAT */}
 
-      <div className="wa-chat">
-       <div className="wa-header">
+<div className={`wa-chat ${selectedUser ? "active" : ""}`}>    
+     <div className="wa-header">
   {selectedUser ? (
     <>
     
       
 <div className="wa-header-left">
+
+  {/* 🔥 ADD THIS BACK BUTTON */}
+  {selectedUser && (
+    <button
+      className="back-btn"
+      onClick={() => setSelectedUser(null)}
+    >
+      ←
+    </button>
+  )}  
   {/* AVATAR */}
   <div className="wa-avatar large">
     {selectedUser.avatar ? (

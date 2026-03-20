@@ -1,33 +1,153 @@
 
 
+:root {
+  --bg-dark: #0b141a;
+  --bg-secondary: #202c33;
+  --bg-chat: #111b21;
+  --msg-own: #005c4b;
+  --msg-other: #202c33;
+  --text-main: #e9edef;
+  --text-sub: #8696a0;
+  --green: #00a884;
+}
+
+body{
+   background: #0b141a;
+}
+
 .wa-container {
   display: flex;
   height: 100vh;
-  font-family: Arial, sans-serif;
+  background: #0b141a;;
+  color: var(--text-main);
+  font-family: "Segoe UI", sans-serif;
 }
 
-.wa-user:hover,
+.wa-sidebar {
+  background:#111b21;;
+  border-right: 1px solid #222;
+  transition: all 0.3 ease;
+}
+
+
+
+.wa-user {
+  color: #e9edef;
+  transition: 0.2s;
+}
+
+.wa-user:hover {
+  background: #202c33;
+}
+
 .wa-user.active {
-  background: #e9edef;
+  background: #2a3942;
 }
-
 
 .wa-chat {
   width: 70%;
   display: flex;
   flex-direction: column;
+  background: #0b141a;
 }
 
 .wa-header {
+  background: var(--bg-secondary);
+  color: white;
+  border-bottom: 1px solid #222;
+}
+
+.wa-messages {
+  flex: 1;
   padding: 15px;
-  background: #ededed;
+  overflow-y: auto;
+  background:#0b141a;
+}
+
+.bubble {
+  display: inline-block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  max-width: 70%;
+  font-size: 14px;
+  position: relative;
+}
+
+.msg.own .bubble {
+  background: #005c4b;
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.msg:not(.own) .bubble {
+  background: #202c33;
+  color: white;
+  border-bottom-left-radius: 2px;
+}
+
+.time {
+  font-size: 10px;
+  color: #aebac1;
+  margin-top: 3px;
+}
+
+.wa-input {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: var(--bg-secondary);
+  gap: 8px;
+}
+
+.wa-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  background: #2a3942;
+  color: white;
+}
+
+.wa-input button {
+  border: none;
+  background: var(--green);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3942;
+  border-radius: 10px;
+}
+
+.wa-avatar {
+  background: #2a3942;
+  color: #d1d7db;
+}
+.wa-user:hover{
+  background: #202c33;
+}
+.wa-user.active {
+  background:#2a3942;
+}
+
+
+
+.wa-header {
+  padding: 15px;
   font-weight: bold;
 }
 
 .wa-messages {
   flex: 1;
   padding: 15px;
-  background: #efeae2;
   overflow-y: auto;
 }
 
@@ -41,15 +161,12 @@
 
 .bubble {
   display: inline-block;
-  background: #fff;
   padding: 8px;
   border-radius: 8px;
   max-width: 70%;
 }
 
-.msg.own .bubble {
-  background: #dcf8c6;
-}
+
 
 .time {
   font-size: 10px;
@@ -72,7 +189,6 @@
 .wa-input {
   display: flex;
   padding: 10px;
-  background: #f0f2f5;
 }
 
 .wa-input input {
@@ -108,7 +224,7 @@
 .wa-header {
   padding: 10px 14px;
   border-bottom: 1px solid #ddd;
-  background: #f0f2f5;
+  background: #202c33;
   display: flex;
   flex-direction: column;
 }
@@ -117,7 +233,7 @@
 .wa-header-name {
   font-size: 16px;
   font-weight: 600;
-  color: #111;
+  color: #ffffff;
 }
 
 /* ONLINE / LAST SEEN */
@@ -175,7 +291,6 @@
 }
 
 .wa-modal {
-  background: #fff;
   width: 320px;
   border-radius: 10px;
   padding: 20px;
@@ -197,6 +312,7 @@
 
 .wa-modal-title {
   margin: 0;
+  padding: 5px;
   font-size: 18px;
   font-weight: 600;
 }
@@ -243,8 +359,6 @@
 
 .wa-sidebar {
   width: 30%;
-  background: #f0f2f5;
-  border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
 }
@@ -252,20 +366,24 @@
 /* profile top */
 .wa-profile {
   height: 60px;
-  background: #ededed;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
-  font-weight: 600;
+  padding: 15px 14px;
+  font-weight: 800;
   font-size: 16px;
+  background: #202c33;
+  color:white;
+  flex-shrink: 0;
+
 }
 
 .wa-profile button {
   background: none;
   border: none;
-  color: #54656f;
+  color: #efefef;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -307,7 +425,7 @@
 .wa-user-name {
  font-size: 15px;
   font-weight: 500;
-  color: #111;
+  color: #e9edef;
 }
 
 /* online dot */
@@ -411,11 +529,55 @@
 
 .wa-user-lastmsg{
   font-size: 13px;
-  color: #667781;        /* WhatsApp gray */
+  color: #8696a0;        /* WhatsApp gray */
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 180px;     /* adjust if needed */
   font-weight: 400;
+}
+
+.back-btn {
+  border: none;
+  background: none;
+  font-size: 20px;
+  margin-right: 8px;
+  cursor: pointer;
+  color: white;
+}
+/* ================= MOBILE RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+
+  .wa-container {
+    flex-direction: column;
+  }
+
+  /* Sidebar full width */
+  .wa-sidebar {
+    width: 100%;
+    height: 100vh;
+  }
+
+  /* Hide chat initially */
+  .wa-chat {
+    width: 100%;
+    height: 100vh;
+    display: none;
+  }
+
+  /* When chat selected → show chat */
+  .wa-chat.active {
+    display: flex;
+  }
+
+  /* When chat open → hide sidebar */
+  .wa-container.chat-open .wa-sidebar {
+    display: none;
+  }
+
+  .wa-container.chat-open .wa-chat {
+    display: flex;
+  }
 }

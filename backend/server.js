@@ -16,9 +16,13 @@ const app = express();
 
 /* ---------------- SOCKET ---------------- */
 const server = http.createServer(app);
+
 const io = new Server(server, {
-  cors: { origin: ["http://localhost:5173",
-    "https://your-frontend.vercel.app"],
+  cors: 
+  { origin: [
+    "http://localhost:5173",
+    "https://chat-application-9q8t.vercel.app"],
+    methods:["GET","POST"],
      credentials: true,
    },
 });
@@ -28,6 +32,10 @@ const onlineUsersMap = new Map();
 
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
+
+  socket.on("disconnect",()=>{
+    console.log("User disconnect")
+  })
 
   /* ---------- JOIN ---------- */
   socket.on("join", async ({ userId }) => {
@@ -137,7 +145,13 @@ socket.on("stopTyping", ({ receiverId, senderId }) => {
 });
 
 // ---------------- EXPRESS ----------------
-app.use(cors());
+app.use(cors({
+  origin:[
+   "http://localhost:5173",
+    "https://chat-application-9q8t.vercel.app"
+  ],
+  credentials:true
+}));
 app.use(express.json());
 
 app.use("/api/chatAuth", chatAuthRoutes);
