@@ -11,8 +11,7 @@ import App from './App.jsx'
 ReactDOM.createRoot(document.getElementById('root')).render(
   // <React.StrictMode>
     <BrowserRouter>
-    {/* <TaskProvider> */}
-      {/* <AuthProvider> */}
+    
     <App />
 <Toaster
     position="top-right"
@@ -20,9 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       duration: 3000,
     }}
   />
-      {/* </AuthProvider> */}
-
-    {/* </TaskProvider> */}
+   
     </BrowserRouter>
   // </React.StrictMode>
 );
