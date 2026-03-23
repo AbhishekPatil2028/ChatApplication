@@ -24,7 +24,7 @@ const io = new Server(server, {
     "https://chat-application-9q8t.vercel.app"],
     methods:["GET","POST"],
      credentials: true,
-   },
+   },transports:["websocket"],
 });
 
 
@@ -163,8 +163,7 @@ app.use("/api/upload", uploadRoutes);
 connectDB();
 
 // ❗ IMPORTANT: use server.listen NOT app.listen
-const PORT = 5000;
-
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
