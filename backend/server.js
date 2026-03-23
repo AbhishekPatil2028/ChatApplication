@@ -21,12 +21,13 @@ const io = new Server(server, {
   cors: 
   { origin: [
     "http://localhost:5173",
+    "https://chatapplication-ivory.vercel.app", 
     "https://chat-application-9q8t.vercel.app"],
     methods:["GET","POST"],
      credentials: true,
    },transports:["websocket"],
 });
-
+app.options("*", cors());
 
 const onlineUsersMap = new Map();
 
