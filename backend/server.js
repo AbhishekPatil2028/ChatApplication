@@ -14,6 +14,14 @@ import Chat from "./models/Chat.model.js"
 import uploadRoutes from "./routes/upload.routes.js";
 const app = express();
 
+
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
+app.get("/test", (req, res) => {
+  res.json({ message: "API working ✅" });
+});
 /* ---------------- SOCKET ---------------- */
 const server = http.createServer(app);
 
