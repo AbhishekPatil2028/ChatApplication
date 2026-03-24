@@ -35,8 +35,10 @@ const io = new Server(server, {
      credentials: true,
    },transports:["websocket"],
 });
-app.options("*", cors());
 
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 const onlineUsersMap = new Map();
 
 io.on("connection", (socket) => {
