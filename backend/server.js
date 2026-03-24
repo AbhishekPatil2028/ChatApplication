@@ -8,6 +8,7 @@ import { Server } from "socket.io";
 
 import connectDB from "./config/dbConnect.js";
 import chatAuthRoutes from "./routes/ChatAuth.routes.js";
+import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import ChatUser  from "./models/ChatUser.model.js";
 import Chat from "./models/Chat.model.js"
@@ -169,6 +170,7 @@ app.use("/api/chatAuth", chatAuthRoutes);
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/upload", uploadRoutes);
+app.use("/api",userRoutes)
 
 // DB
 connectDB();
