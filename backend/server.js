@@ -37,9 +37,7 @@ const io = new Server(server, {
    },transports:["websocket"],
 });
 
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
+
 const onlineUsersMap = new Map();
 
 io.on("connection", (socket) => {
@@ -171,6 +169,11 @@ app.use("/api/chat", chatRoutes);
 
 app.use("/api/upload", uploadRoutes);
 app.use("/api",userRoutes)
+
+// ❗ 404 HANDLER LAST
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 // DB
 connectDB();
