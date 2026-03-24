@@ -158,7 +158,7 @@ socket.on("stopTyping", ({ receiverId, senderId }) => {
 app.use(cors({
   origin:[
    "http://localhost:5173",
-    "https://chat-application-9q8t.vercel.app/"
+    "https://chat-application-9q8t.vercel.app"
   ],
   credentials:true
 }));
