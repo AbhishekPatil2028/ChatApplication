@@ -3,8 +3,8 @@ import { signup, login } from "../controllers/chatAuth.controller.js";
 
 const router = express.Router();
 
-router.post("/chat-signup", signup);
-router.post("/chat-login", login);
+router.post("/signup", signup);
+router.post("/login", login);
 
 
 export default router;
