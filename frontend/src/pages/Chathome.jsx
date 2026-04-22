@@ -7,17 +7,21 @@ export default function ChatHome() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>ChatApp</h1>
-        <p style={styles.subtitle}>
-          Simple • Fast • Real-time
-        </p>
+        <p style={styles.subtitle}>Simple • Fast • Real-time</p>
 
-        <button style={styles.primaryBtn} onClick={() => navigate("/chat-login")}>
+        <button
+          style={styles.primaryBtn}
+          onClick={() => navigate("/chat-login")}
+        >
           Continue to Chat
         </button>
 
         <p style={{ margin: "16px 0" }}>New here?</p>
 
-        <button style={styles.secondaryBtn} onClick={() => navigate("/chat-signup")}>
+        <button
+          style={styles.secondaryBtn}
+          onClick={() => navigate("/chat-signup")}
+        >
           Create New Account
         </button>
       </div>
@@ -31,7 +35,7 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#f0f2f5"
+    background: "#f0f2f5",
   },
   card: {
     background: "#fff",
@@ -39,15 +43,15 @@ const styles = {
     borderRadius: 10,
     width: 320,
     textAlign: "center",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
   },
   title: {
     marginBottom: 8,
-    color: "#25D366" // WhatsApp green
+    color: "#25D366", // WhatsApp green
   },
   subtitle: {
     color: "#666",
-    marginBottom: 24
+    marginBottom: 24,
   },
   primaryBtn: {
     width: "100%",
@@ -57,7 +61,7 @@ const styles = {
     border: "none",
     borderRadius: 6,
     fontSize: 16,
-    cursor: "pointer"
+    cursor: "pointer",
   },
   secondaryBtn: {
     width: "100%",
@@ -67,6 +71,6 @@ const styles = {
     border: "2px solid #25D366",
     borderRadius: 6,
     fontSize: 16,
-    cursor: "pointer"
-  }
+    cursor: "pointer",
+  },
 };

@@ -407,14 +407,7 @@ body{
   transition: background 0.15s ease;
 }
 
-.wa-user:hover {
-  /* background: #e9edef; */
-  /* text:var(--green); */
-}
 
-.wa-user.active {
-  background: #d1f4cc; /* WhatsApp light green */
-}
 
 /* left name + dot */
 .wa-user-left {
@@ -431,9 +424,9 @@ body{
 
 /* online dot */
 .dot {
-  width: 9px;
-  height: 9px;
-  background: #25d366;
+  width: 15px;
+  height: 15px;
+  background: #19e764;
   border-radius: 50%;
 }
 

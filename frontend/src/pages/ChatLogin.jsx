@@ -12,15 +12,18 @@ export default function ChatLogin() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-
     try {
       setLoading(true);
-      const res = await chatApi.post("/chatAuth/chat-login", { email,password });
-      setError("")
+      const res = await chatApi.post("/chatAuth/chat-login", {
+        email,
+        password,
+      });
+      setError("");
       localStorage.setItem("chatUser", JSON.stringify(res.data));
       navigate("/chat");
     } catch (err) {
-setError(err.response?.data?.message || "Invalid email or password");    } finally {
+      setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
       setLoading(false);
     }
   };
@@ -32,22 +35,21 @@ setError(err.response?.data?.message || "Invalid email or password");    } final
         <p className="sub">Login to continue chatting</p>
 
         <input
-  placeholder="Email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-/>
-<input
-  type="password"
-  placeholder="Password"
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-/>
-{error && (
-  <p style={{ color: "red", fontSize: "13px", marginTop: "5px" }}>
-    {error}
-  </p>
-)}
-
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && (
+          <p style={{ color: "red", fontSize: "13px", marginTop: "5px" }}>
+            {error}
+          </p>
+        )}
 
         <button onClick={handleLogin} disabled={loading}>
           {loading ? "Logging in..." : "Login"}

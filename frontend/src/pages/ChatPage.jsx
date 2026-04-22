@@ -12,8 +12,7 @@ export default function ChatPage() {
   const [onlineUserIds, setOnlineUserIds] = useState(new Set());
   const [lastSeenMap, setLastSeenMap] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
-  
-  
+
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [typingUser, setTypingUser] = useState("");
@@ -27,20 +26,23 @@ export default function ChatPage() {
 
   if (!user) return <h2>Please login</h2>;
 
+  const selectedUserRef = useRef(null);
 
+  useEffect(() => {
+    selectedUserRef.current = selectedUser;
+  }, [selectedUser]);
 
-/* ================= PREVENT BACK ARROW LOGOUT ================= */
-useEffect(() => {
-  const preventBack = () => {
+  /* ================= PREVENT BACK ARROW LOGOUT ================= */
+  useEffect(() => {
+    const preventBack = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+
     window.history.pushState(null, "", window.location.href);
-  };
+    window.addEventListener("popstate", preventBack);
 
-  window.history.pushState(null, "", window.location.href);
-  window.addEventListener("popstate", preventBack);
-
-  return () => window.removeEventListener("popstate", preventBack);
-}, []);
-
+    return () => window.removeEventListener("popstate", preventBack);
+  }, []);
 
   /* ================= HELPERS ================= */
   const isToday = (d) =>
@@ -56,8 +58,8 @@ useEffect(() => {
     isToday(d)
       ? "Today"
       : isYesterday(d)
-      ? "Yesterday"
-      : new Date(d).toLocaleDateString();
+        ? "Yesterday"
+        : new Date(d).toLocaleDateString();
 
   const formatLastSeen = (time) => {
     const d = new Date(time);
@@ -76,159 +78,142 @@ useEffect(() => {
       setUsers(res.data.filter((u) => u._id !== user._id));
     });
   }, [user._id]);
+
   useEffect(() => {
-  chatApi.get("/chat/last-messages").then((res) => {
-    // response format: { userId: { message, type, createdAt } }
-    setLastMessageMap(res.data);
-  });
-}, []);
+    chatApi.get("/chat/last-messages").then((res) => {
+      // response format: { userId: { message, type, createdAt } }
+      setLastMessageMap(res.data);
+    });
+  }, []);
 
-// useEffect(() => {
-//   const handleOnlineUsers = async () => {
-//     const res = await chatApi.get("/chatAuth/users");
-//     setUsers(res.data.filter((u) => u._id !== user._id));
-//   };
+  /* ================= LOAD CHAT ================= */
+  useEffect(() => {
+    if (!selectedUser) return;
 
-//   chatSocket.on("onlineUsers", handleOnlineUsers);
-
-//   return () => {
-//     chatSocket.off("onlineUsers", handleOnlineUsers);
-//   };
-// }, [user._id]);
-
-
-
-/* ================= LOAD CHAT ================= */
-useEffect(() => {
-  if (!selectedUser) return;
-
-  chatApi
-    .get(`/chat/${user._id}/${selectedUser._id}`)
-    .then((res) => {
+    chatApi.get(`/chat/${user._id}/${selectedUser._id}`).then((res) => {
       setMessages(
         res.data.map((m) => ({
           ...m,
           status: m.isRead ? "seen" : "delivered",
-        }))
+        })),
       );
 
       const lastMsg = res.data[res.data.length - 1];
       if (lastMsg) {
         setLastMessageMap((prev) => ({
           ...prev,
-          [selectedUser._id]: lastMsg,   // full object ठेव
+          [selectedUser._id]: lastMsg, // full object ठेव
         }));
       }
 
       setUnreadMap((p) => ({ ...p, [selectedUser._id]: 0 }));
     });
-}, [selectedUser]);
-
+  }, [selectedUser]);
 
   /* ================= SOCKET ================= */
 
-
-
   useEffect(() => {
-       // ✅ CONNECT SOCKET
-  chatSocket.connect();
+    // ✅ CONNECT SOCKET
+    chatSocket.connect();
 
-  // ✅ AFTER CONNECT JOIN USER
-  chatSocket.on("connect", () => {
-    console.log("✅ Connected:", chatSocket.id);
+    // ✅ AFTER CONNECT JOIN USER
+    chatSocket.on("connect", () => {
+      console.log("✅ Connected:", chatSocket.id);
 
-    chatSocket.emit("join", { userId: user._id });
-  });
+      chatSocket.emit("join", { userId: user._id });
+    });
 
-  chatSocket.on("connect_error", (err) => {
-    console.log("❌ Socket Error:", err.message);
-  });
+    chatSocket.on("connect_error", (err) => {
+      console.log("❌ Socket Error:", err.message);
+    });
+
     chatSocket.on("onlineUsers", (list) => {
-       console.log("ONLINE USERS FROM SERVER:", list);
+      console.log("ONLINE USERS:", list);
+
       const newOnline = new Set(list.map((u) => u._id));
-      setOnlineUserIds((prev) => {
-        prev.forEach((id) => {
-          if (!newOnline.has(id)) {
-            setLastSeenMap((p) => ({
-              ...p,
-              [id]: new Date().toISOString(),
-            }));
+
+      // 🔥 update online users directly
+      setOnlineUserIds(newOnline);
+
+      // 🔥 update last seen for offline users
+      setLastSeenMap((prev) => {
+        const updated = { ...prev };
+
+        users.forEach((u) => {
+          if (!newOnline.has(u._id)) {
+            updated[u._id] = new Date().toISOString();
           }
         });
-        return newOnline;
+
+        return updated;
       });
     });
 
-  chatSocket.on("receiveMessage", (msg) => {
-  const isActive =
-    selectedUser &&
-    ((msg.senderId === user._id &&
-      msg.receiverId === selectedUser._id) ||
-      (msg.senderId === selectedUser._id &&
-        msg.receiverId === user._id));
+    chatSocket.on("receiveMessage", (msg) => {
+      const currentUser = selectedUserRef.current;
 
-  if (isActive) {
-    setMessages((p) => [...p, { ...msg, status: "delivered" }]);
-  } else {
-    setUnreadMap((p) => ({
-      ...p,
-      [msg.senderId]: (p[msg.senderId] || 0) + 1,
-    }));
-  }
+      // ✅ SHOW MESSAGE IN OPEN CHAT
+      if (
+        currentUser &&
+        (msg.senderId === currentUser._id || msg.receiverId === currentUser._id)
+      ) {
+        setMessages((prev) => [...prev, { ...msg, status: "delivered" }]);
+      }
 
-  // 🔥 ADD THIS
-  setLastMessageMap((prev) => ({
-    ...prev,
-    [msg.senderId === user._id ? msg.receiverId : msg.senderId]: msg,
-  }));
+      // ✅ HANDLE UNREAD COUNT
+      if (msg.senderId !== user._id && msg.senderId !== currentUser?._id) {
+        setUnreadMap((p) => ({
+          ...p,
+          [msg.senderId]: (p[msg.senderId] || 0) + 1,
+        }));
+      }
 
-  if (msg.senderId !== user._id) {
-    chatSocket.emit("messageDelivered", {
-      messageId: msg._id,
-      senderId: msg.senderId,
+      // ✅ UPDATE LAST MESSAGE
+      setLastMessageMap((prev) => ({
+        ...prev,
+        [msg.senderId === user._id ? msg.receiverId : msg.senderId]: msg,
+      }));
+
+      // ✅ DELIVERY TICK
+      if (msg.senderId !== user._id) {
+        chatSocket.emit("messageDelivered", {
+          messageId: msg._id,
+          senderId: msg.senderId,
+        });
+      }
     });
-  }
-});
-
 
     chatSocket.on("messageSeen", ({ messageId }) => {
       setMessages((p) =>
-        p.map((m) =>
-          m._id === messageId ? { ...m, status: "seen" } : m
-        )
+        p.map((m) => (m._id === messageId ? { ...m, status: "seen" } : m)),
       );
     });
 
-chatSocket.on("typing", ({ senderId }) => {
-  if (!selectedUser) return;
+    chatSocket.on("typing", ({ senderId }) => {
+      if (!selectedUser) return;
 
-  if (senderId === selectedUser._id) {
-    setTypingUser(true);
-  }
-});
+      if (senderId === selectedUser._id) {
+        setTypingUser(true);
+      }
+    });
 
-chatSocket.on("stopTyping", ({ senderId }) => {
-  if (!selectedUser) return;
+    chatSocket.on("stopTyping", ({ senderId }) => {
+      if (!selectedUser) return;
 
-  if (senderId === selectedUser._id) {
-    setTypingUser(false);
-  }
-});
-
-
-
+      if (senderId === selectedUser._id) {
+        setTypingUser(false);
+      }
+    });
 
     return () => chatSocket.off();
-  }, []);
+  }, [users]);
 
   /* ================= SCROLL + SEEN ================= */
-  useEffect(()=>{
-
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  },[])
+  }, []);
 
   useEffect(() => {
-
     messages.forEach((m) => {
       if (
         selectedUser &&
@@ -260,29 +245,28 @@ chatSocket.on("stopTyping", ({ senderId }) => {
 
   /* ================= SEND IMAGE ================= */
   const handleImageSend = async (e) => {
-  const file = e.target.files[0];
-  if (!file || !selectedUser) return;
+    const file = e.target.files[0];
+    if (!file || !selectedUser) return;
 
-  const formData = new FormData();
-  formData.append("image", file);
+    const formData = new FormData();
+    formData.append("image", file);
 
-  try {
-    const res = await chatApi.post("/upload", formData);
+    try {
+      const res = await chatApi.post("/upload", formData);
 
-    const imageUrl = res.data.url;
+      const imageUrl = res.data.url;
 
-    chatSocket.emit("sendMessage", {
-      senderId: user._id,
-      receiverId: selectedUser._id,
-      senderName: user.name,
-      message: imageUrl,   // ✅ URL instead of base64
-      type: "image",
-    });
-
-  } catch (err) {
-    console.log("Upload failed", err);
-  }
-};
+      chatSocket.emit("sendMessage", {
+        senderId: user._id,
+        receiverId: selectedUser._id,
+        senderName: user.name,
+        message: imageUrl, // ✅ URL instead of base64
+        type: "image",
+      });
+    } catch (err) {
+      console.log("Upload failed", err);
+    }
+  };
 
   /* ================= LOGOUT ================= */
   const confirmLogout = () => {
@@ -295,127 +279,115 @@ chatSocket.on("stopTyping", ({ senderId }) => {
   let lastDateLabel = "";
 
   return (
-<div className={`wa-container ${selectedUser ? "chat-open" : ""}`}>      {/* SIDEBAR */}
+    <div className={`wa-container ${selectedUser ? "chat-open" : ""}`}>
+      {" "}
+      {/* SIDEBAR */}
       <div className="wa-sidebar">
         <div className="wa-profile">
           <span>{user.name}</span>
           <button onClick={() => setShowLogoutModal(true)}>Logout</button>
         </div>
-          
-          <div className="wa-user-list">
 
-        {users.map((u) => (
-  <div
-    key={u._id}
-    className={`wa-user ${
-      selectedUser?._id === u._id ? "active" : ""
-    }`}
-    onClick={() => setSelectedUser(u)}
-  >
-    <div className="wa-user-left">
-      <div className="wa-avatar">
-        {u.avatar ? (
-          <img src={u.avatar} alt={u.name} />
-        ) : (
-          <span>{u.name.charAt(0).toUpperCase()}</span>
-        )}
+        <div className="wa-user-list">
+          {users.map((u) => (
+            <div
+              key={u._id}
+              className={`wa-user ${
+                selectedUser?._id === u._id ? "active" : ""
+              }`}
+              onClick={() => setSelectedUser(u)}
+            >
+              <div className="wa-user-left">
+                <div className="wa-avatar">
+                  {u.avatar ? (
+                    <img src={u.avatar} alt={u.name} />
+                  ) : (
+                    <span>{u.name.charAt(0).toUpperCase()}</span>
+                  )}
 
-        {onlineUserIds.has(u._id) && (
-          <span className="wa-avatar-online" />
-        )}
+                  {onlineUserIds.has(u._id) && (
+                    <span className="wa-avatar-online" />
+                  )}
+                </div>
+
+                <div className="wa-user-text">
+                  <div className="wa-user-name">{u.name}</div>
+
+                  {/* line वर latest message */}
+                  <div className="wa-user-lastmsg">
+                    {lastMessageMap[u._id]?.type === "image"
+                      ? "📷 Photo"
+                      : lastMessageMap[u._id]?.message || " "}
+                  </div>
+                </div>
+              </div>
+
+              {unreadMap[u._id] > 0 && (
+                <span className="badge">{unreadMap[u._id]}</span>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-
-        <div className="wa-user-text">
-    <div className="wa-user-name">{u.name}</div>
-
-    {/* line वर latest message */}
-   <div className="wa-user-lastmsg">
-  {lastMessageMap[u._id]?.type === "image"
-    ? "📷 Photo"
-    : lastMessageMap[u._id]?.message || " "}
-</div>
-
-  </div>
-
-
-    </div>
-
-    {unreadMap[u._id] > 0 && (
-      <span className="badge">{unreadMap[u._id]}</span>
-    )}
-  </div>
-))}
-          </div>
-
-
-      </div>
-
       {/* CHAT */}
+      <div className={`wa-chat ${selectedUser ? "active" : ""}`}>
+        <div className="wa-header">
+          {selectedUser ? (
+            <>
+              <div className="wa-header-left">
+                {/* 🔥 ADD THIS BACK BUTTON */}
+                {selectedUser && (
+                  <button
+                    className="back-btn"
+                    onClick={() => setSelectedUser(null)}
+                  >
+                    ←
+                  </button>
+                )}
+                {/* AVATAR */}
+                <div className="wa-avatar large">
+                  {selectedUser.avatar ? (
+                    <img src={selectedUser.avatar} alt={selectedUser.name} />
+                  ) : (
+                    <span>{selectedUser.name.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
 
-<div className={`wa-chat ${selectedUser ? "active" : ""}`}>    
-     <div className="wa-header">
-  {selectedUser ? (
-    <>
-    
-      
-<div className="wa-header-left">
+                {/* NAME + STATUS */}
+                <div>
+                  <div className="wa-header-name">{selectedUser.name}</div>
 
-  {/* 🔥 ADD THIS BACK BUTTON */}
-  {selectedUser && (
-    <button
-      className="back-btn"
-      onClick={() => setSelectedUser(null)}
-    >
-      ←
-    </button>
-  )}  
-  {/* AVATAR */}
-  <div className="wa-avatar large">
-    {selectedUser.avatar ? (
-      <img src={selectedUser.avatar} alt={selectedUser.name} />
-    ) : (
-      <span>{selectedUser.name.charAt(0).toUpperCase()}</span>
-    )}
-  </div>
-
-  {/* NAME + STATUS */}
-  <div>
-    <div className="wa-header-name">{selectedUser.name}</div>
-
-    <div
-      className={`wa-header-status ${
-        typingUser
-          ? "typing-active"
-          : onlineUserIds.has(selectedUser._id)
-          ? "online"
-          : "offline"
-      }`}
-    >
-      {typingUser ? (
-        <>
-          typing
-          <span className="dot-typing one">.</span>
-          <span className="dot-typing two">.</span>
-          <span className="dot-typing three">.</span>
-        </>
-      ) : onlineUserIds.has(selectedUser._id) ? (
-        "online"
-      ) : lastSeenMap[selectedUser._id] ? (
-        formatLastSeen(lastSeenMap[selectedUser._id])
-      ) : (
-        "offline"
-      )}
-    </div>
-  </div>
-</div>
-
-
-    </>
-  ) : (
-    "Select a chat"
-  )}
-</div>
-
+                  <div
+                    className={`wa-header-status ${
+                      typingUser
+                        ? "typing-active"
+                        : onlineUserIds.has(selectedUser._id)
+                          ? "online"
+                          : "offline"
+                    }`}
+                  >
+                    {typingUser ? (
+                      <>
+                        typing
+                        <span className="dot-typing one">.</span>
+                        <span className="dot-typing two">.</span>
+                        <span className="dot-typing three">.</span>
+                      </>
+                    ) : onlineUserIds.has(selectedUser._id) ? (
+                      "online"
+                    ) : lastSeenMap[selectedUser._id] ? (
+                      formatLastSeen(lastSeenMap[selectedUser._id])
+                    ) : (
+                      "offline"
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            "Select a chat"
+          )}
+        </div>
 
         <div className="wa-messages">
           {messages.map((m) => {
@@ -432,11 +404,7 @@ chatSocket.on("stopTyping", ({ senderId }) => {
                 <div className={`msg ${own ? "own" : ""}`}>
                   <div className="bubble">
                     {m.type === "image" ? (
-                      <img
-                        src={m.message}
-                        alt="img"
-                        className="chat-image"
-                      />
+                      <img src={m.message} alt="img" className="chat-image" />
                     ) : (
                       m.message
                     )}
@@ -445,8 +413,7 @@ chatSocket.on("stopTyping", ({ senderId }) => {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                      {own &&
-                        (m.status === "seen" ? " ✔✔" : " ✔")}
+                      {own && (m.status === "seen" ? " ✔✔" : " ✔")}
                     </div>
                   </div>
                 </div>
@@ -457,90 +424,78 @@ chatSocket.on("stopTyping", ({ senderId }) => {
           {typingUser && <div className="typing">{typingUser}</div>}
           <div ref={bottomRef} />
         </div>
-           
-           {selectedUser &&(
 
-             <div className="wa-input">
+        {selectedUser && (
+          <div className="wa-input">
+            <input
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
 
-          <input
-  value={text}
-  onChange={(e) => {
-    setText(e.target.value);
-    
-    if (!selectedUser) return;
-    
-    // 🔥 EMIT TYPING
-    chatSocket.emit("typing", {
-      receiverId: selectedUser._id,
-      senderId: user._id,
-    });
-    
-    // stop typing after delay
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      chatSocket.emit("stopTyping", {
-        receiverId: selectedUser._id,
-        senderId: user._id,
-      });
-    }, 800);
-  }}
-   onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      sendMessage();   // Enter press = Send
-    }
-  }}
-  placeholder={
-    selectedUser ? `Message ${selectedUser.name}` : "Select user"
-  }
-/>
+                if (!selectedUser) return;
 
+                // 🔥 EMIT TYPING
+                chatSocket.emit("typing", {
+                  receiverId: selectedUser._id,
+                  senderId: user._id,
+                });
 
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            ref={fileInputRef}
-            onChange={handleImageSend}
-          />
+                // stop typing after delay
+                clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = setTimeout(() => {
+                  chatSocket.emit("stopTyping", {
+                    receiverId: selectedUser._id,
+                    senderId: user._id,
+                  });
+                }, 800);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  sendMessage(); // Enter press = Send
+                }
+              }}
+              placeholder={
+                selectedUser ? `Message ${selectedUser.name}` : "Select user"
+              }
+            />
 
-          <button onClick={() => fileInputRef.current.click()}>
-            📷
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              ref={fileInputRef}
+              onChange={handleImageSend}
+            />
 
-          <button onClick={sendMessage}>Send</button>
+            <button onClick={() => fileInputRef.current.click()}>📷</button>
+
+            <button onClick={sendMessage}>Send</button>
+          </div>
+        )}
+      </div>
+      {/* LOGOUT MODAL */}
+      {/* LOGOUT MODAL */}
+      {showLogoutModal && (
+        <div className="wa-modal-overlay">
+          <div className="wa-modal">
+            <h3 className="wa-modal-title">Logout</h3>
+            <p className="wa-modal-text">Are you sure you want to logout?</p>
+
+            <div className="wa-modal-actions">
+              <button
+                className="wa-btn cancel"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button className="wa-btn danger" onClick={confirmLogout}>
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      </div>
-
-      {/* LOGOUT MODAL */}
-     {/* LOGOUT MODAL */}
-{showLogoutModal && (
-  <div className="wa-modal-overlay">
-    <div className="wa-modal">
-      <h3 className="wa-modal-title">Logout</h3>
-      <p className="wa-modal-text">
-        Are you sure you want to logout?
-      </p>
-
-      <div className="wa-modal-actions">
-        <button
-          className="wa-btn cancel"
-          onClick={() => setShowLogoutModal(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="wa-btn danger"
-          onClick={confirmLogout}
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
     </div>
   );
 }
