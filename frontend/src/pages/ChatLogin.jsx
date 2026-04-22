@@ -14,7 +14,7 @@ export default function ChatLogin() {
   const handleLogin = async () => {
     try {
       setLoading(true);
-      const res = await chatApi.post("/chatAuth/chat-login", {
+      const res = await chatApi.post("api/chatAuth/chat-login", {
         email,
         password,
       });
