@@ -83,18 +83,18 @@ useEffect(() => {
   });
 }, []);
 
-useEffect(() => {
-  const handleOnlineUsers = async () => {
-    const res = await chatApi.get("/chatAuth/users");
-    setUsers(res.data.filter((u) => u._id !== user._id));
-  };
+// useEffect(() => {
+//   const handleOnlineUsers = async () => {
+//     const res = await chatApi.get("/chatAuth/users");
+//     setUsers(res.data.filter((u) => u._id !== user._id));
+//   };
 
-  chatSocket.on("onlineUsers", handleOnlineUsers);
+//   chatSocket.on("onlineUsers", handleOnlineUsers);
 
-  return () => {
-    chatSocket.off("onlineUsers", handleOnlineUsers);
-  };
-}, [user._id]);
+//   return () => {
+//     chatSocket.off("onlineUsers", handleOnlineUsers);
+//   };
+// }, [user._id]);
 
 
 
@@ -219,7 +219,7 @@ chatSocket.on("stopTyping", ({ senderId }) => {
 
 
     return () => chatSocket.off();
-  }, [selectedUser]);
+  }, []);
 
   /* ================= SCROLL + SEEN ================= */
   useEffect(()=>{
@@ -328,7 +328,7 @@ chatSocket.on("stopTyping", ({ senderId }) => {
         <div className="wa-user-text">
     <div className="wa-user-name">{u.name}</div>
 
-    {/* 👇 याच line वर latest message */}
+    {/* line वर latest message */}
    <div className="wa-user-lastmsg">
   {lastMessageMap[u._id]?.type === "image"
     ? "📷 Photo"

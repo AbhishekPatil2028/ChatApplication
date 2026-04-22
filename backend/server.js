@@ -30,7 +30,6 @@ const io = new Server(server, {
   cors: 
   { origin: [
     "http://localhost:5173",
-    "https://chatapplication-ivory.vercel.app", 
     "https://chat-application-9q8t.vercel.app"],
     methods:["GET","POST"],
      credentials: true,
@@ -168,7 +167,7 @@ app.use("/api/chatAuth", chatAuthRoutes);
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/upload", uploadRoutes);
-app.use("/api",userRoutes)
+app.use("/api/chatAuth",userRoutes)
 
 // ❗ 404 HANDLER LAST
 app.use((req, res) => {

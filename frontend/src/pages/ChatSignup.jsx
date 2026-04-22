@@ -17,13 +17,13 @@ export default function ChatSignup() {
       password
     });
 
-    // 2️⃣ AUTO LOGIN (🔥 IMPORTANT)
+    // 2️⃣ AUTO LOGIN 
     localStorage.setItem("chatUser", JSON.stringify(res.data));
 
     // 3️⃣ redirect to chat
     navigate("/chat");
   } catch (err) {
-    alert(err.response?.data?.message || "Signup failed");
+    alert( "Signup failed");
   }
 };
 
