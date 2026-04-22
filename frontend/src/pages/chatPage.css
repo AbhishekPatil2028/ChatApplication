@@ -408,7 +408,8 @@ body{
 }
 
 .wa-user:hover {
-  background: #e9edef;
+  /* background: #e9edef; */
+  /* text:var(--green); */
 }
 
 .wa-user.active {

@@ -33,7 +33,7 @@ const io = new Server(server, {
     "https://chat-application-9q8t.vercel.app"],
     methods:["GET","POST"],
      credentials: true,
-   },transports:["websocket"],
+   },
 });
 
 
